@@ -1,0 +1,32 @@
+SELECT
+  -- 1. Standardize ride_id to 16 characters
+  RPAD(LEFT(CAST(ride_id AS STRING), 16), 16, '0') AS ride_id,
+  rideable_type,
+  started_at,
+  ended_at,
+
+  -- 2. Clean up station names (Remove "[Archived]" and fill empty names)
+  IFNULL(
+    TRIM(REGEXP_REPLACE(start_station_name, r'^\[Archived\]\s*', '')),
+    'On Bike Lock')
+    AS start_station_name,
+  IFNULL(
+    TRIM(REGEXP_REPLACE(end_station_name, r'^\[Archived\]\s*', '')),
+    'On Bike Lock')
+    AS end_station_name,
+
+  -- 3. columns for Day and Month
+  FORMAT_TIMESTAMP('%A', started_at) AS day_of_week,
+  FORMAT_TIMESTAMP('%B', started_at) AS month,
+  start_lat,
+  start_lng,
+  end_lat,
+  end_lng,
+  member_casual
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`
+WHERE
+  -- 4. Filter by duration (between 1 minute and 24 hours)
+  TIMESTAMP_DIFF(ended_at, started_at, SECOND) BETWEEN 60 AND 86400
+  -- 5. Only bring location data that is not NULL
+  AND start_lat IS NOT NULL
+  AND end_lat IS NOT NULL;
