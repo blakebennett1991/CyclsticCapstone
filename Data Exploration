@@ -1,0 +1,65 @@
+
+--1. ride_id Analysis:
+-- Check length combinations for ride_id
+-- and verify all values are unique so it can be used for primary key
+SELECT LENGTH(ride_id), count(*)
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`
+GROUP BY LENGTH(ride_id);
+
+SELECT COUNT (DISTINCT ride_id)
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`;
+
+--Some cleanup involved, as there appears to be leading zeroes on multiple ride_ids
+
+
+--2. Check allowable rideable_types:
+--shows only two rideable types (Classic Bikes and Electric Bikes)
+
+SELECT DISTINCT rideable_type
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`;
+
+
+--3. Check started_at and ended_at columns:
+--Flag rows where ride length is <= 1 minute or >= 24 hours.
+
+SELECT *
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`
+WHERE
+  TIMESTAMP_DIFF(ended_at, started_at, SECOND) <= 60
+  OR TIMESTAMP_DIFF(ended_at, started_at, SECOND) >= 86400;
+
+--4. Check start/end station names for naming inconsistencies:
+--Identify archived entries.
+
+SELECT start_station_name, COUNT(*) AS count
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`
+GROUP BY start_station_name
+ORDER BY start_station_name;
+
+SELECT
+  COUNT(DISTINCT start_station_name) AS unq_startname,
+  COUNT(DISTINCT end_station_name) AS unq_endname,
+  COUNT(DISTINCT start_station_id) AS unq_startid,
+  COUNT(DISTINCT end_station_id) AS unq_endid
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`;
+
+--Check NULLs in station name columns:
+--Identify which bike types are associated with missing station data.
+SELECT rideable_type, COUNT(*) AS num_of_rides
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`
+WHERE start_station_name IS NULL OR end_station_name IS NULL
+GROUP BY rideable_type;
+
+
+--6. Check for NULL coordinates:
+--Verify if any rows lack latitude or longitude points.
+SELECT *
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`
+WHERE
+  start_lat IS NULL OR start_lng IS NULL OR end_lat IS NULL OR end_lng IS NULL;
+
+
+--7. Confirm member types:
+--Verify the 'member_casual' column contains only expected values.
+SELECT DISTINCT member_casual
+FROM `blakecapstone.BlakeCyclisticCapstone.CombinedData`;
